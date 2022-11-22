@@ -1,0 +1,34 @@
+name: Fetch latest articles and toot about them
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron:  '30 08 * * *'
+
+jobs:
+  scheduled:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out this repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@v4.3.0
+      with:
+        python-version: 3.11
+    - name: Install Python dependencies
+      run: |-
+        python3 -m pip install Mastodon.py requests-html
+    - name: Run script
+      run: |-
+        python3 qss-paper-bot.py
+    - name: Commit and push if it changed
+      run: |-
+        git config user.name "Automated"
+        git config user.email "actions@users.noreply.github.com"
+        git add seen-dois.txt
+        timestamp=$(date -u)
+        git commit -m "Add new DOIs" || exit 0
+        git push
