@@ -79,6 +79,7 @@ def update():
     # Post all new articles
     for article in new_articles:
         mastodon.status_post(article.to_message())
+        print(f"Tooted article '{article.title}'")
 
     # Register that we've posted these articles
     with open(tooted_dois_file, mode="a", encoding="utf-8") as fh:
