@@ -22,6 +22,8 @@ jobs:
       run: |-
         python3 -m pip install Mastodon.py requests-html
     - name: Run script
+      env:
+        BOTSIN_SPACE_ACCESS_TOKEN: ${{ secrets.BOTSIN_SPACE_ACCESS_TOKEN }}
       run: |-
         python3 qss-paper-bot.py
     - name: Commit and push if it changed
