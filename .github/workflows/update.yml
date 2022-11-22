@@ -17,7 +17,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4.3.0
       with:
-        python-version: 3.10
+        python-version: "3.10"
     - name: Install Python dependencies
       run: |-
         python3 -m pip install Mastodon.py requests-html
