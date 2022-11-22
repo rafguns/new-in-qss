@@ -47,7 +47,7 @@ class Article:
 
 
 def get_article_divs(session):
-    r = session.get("https://direct.mit.edu/qss/online-early")
+    r = session.get("https://direct.mit.edu/")
     r.raise_for_status()
     print(r.html.raw_html)
     return r.html.find("div.al-article-items")
