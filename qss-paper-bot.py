@@ -1,10 +1,11 @@
+import json
 import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
-import requests_html
+import requests
 from mastodon import Mastodon
 
 
@@ -12,25 +13,15 @@ from mastodon import Mastodon
 class Article:
     title: str
     url: str
-    # DOI is part of the URL but probably more persistent.
-    # Used to ensure we don't toot the same article twice
     doi: str
     authors: List[str]
 
     @classmethod
-    def from_html(cls, html):
-        title_el = html.find(".al-title a")[0]
-        title = title_el.text
-        url = title_el.absolute_links.pop()  # `absolute_links`is a one-element set
+    def from_dict(cls, data):
+        title = data["title"][0]
+        authors = [au["given"] + " " + au["family"] for au in data["author"]]
 
-        doi_match = re.search("/doi/(10\.\d+/.+?)/", url)
-        if not doi_match:
-            raise ValueError("Could not extract DOI frorm url {url}")
-        doi = doi_match.group(1)
-
-        authors = [el.text for el in html.find("div.al-authors-list .wi-fullname")]
-
-        return cls(title, url, doi, authors)
+        return cls(title, data["URL"], data["DOI"], authors)
 
     def to_message(self, char_limit=500):
         author_list = ", ".join(self.authors)
@@ -46,26 +37,33 @@ class Article:
         return f"{self.title}\nby {author_list}\n{self.url}"
 
 
-def get_article_divs(session):
-    r = session.get(
-        "https://direct.mit.edu/qss/online-early",
-        headers={"user-agent": "Mozilla/5.0 (QSS Bot)"},
-    )
-    return r.html.find("div.al-article-items")
+def latest_articles(issn="2641-3337", num_items=20):
+    url = f"http://api.crossref.org/journals/{issn}/works"
+    params = {"sort": "published-online", "order": "desc", "rows": num_items}
+    if email := os.environ.get("EMAIL"):
+        params["mailto"] = email
+
+    r = requests.get(url, params=params)
+    r.raise_for_status()
+
+    data = r.json()
+    if data["status"] != "ok":
+        raise Exception(f"Unexpected status {data['status']}")
+
+    return data["message"]["items"]
 
 
 def update():
-    # Get articles from QSS site
-    session = requests_html.HTMLSession()
-    article_divs = get_article_divs(session)
-    articles = [Article.from_html(article_div) for article_div in article_divs]
-    dois_on_page = {article.doi for article in articles}
+    # Get articles from CrossRef
+    article_dicts = latest_articles()
+    articles = [Article.from_dict(article_dict) for article_dict in reversed(article_dicts)]
+    latest_dois = {article.doi for article in articles}
 
     # Determine new DOIs/articles
     tooted_dois_file = Path("./tooted-dois.txt")
     with open(tooted_dois_file, encoding="utf-8") as fh:
         tooted_dois = {line.rstrip("\n") for line in fh}
-    new_dois = dois_on_page - tooted_dois
+    new_dois = latest_dois - tooted_dois
     new_articles = [article for article in articles if article.doi in new_dois]
 
     # Connect to Mastodon instance
@@ -79,12 +77,12 @@ def update():
     # Post all new articles
     for article in new_articles:
         mastodon.status_post(article.to_message())
-        print(f"Tooted article '{article.title}'")
+        print(f"Tooted article '{article.title}' {article.doi}")
 
     # Register that we've posted these articles
     with open(tooted_dois_file, mode="a", encoding="utf-8") as fh:
-        for doi in new_dois:
-            fh.write(doi)
+        for article in new_articles:
+            fh.write(article.doi + "\n")
 
 
 if __name__ == "__main__":
