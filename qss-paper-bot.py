@@ -55,7 +55,7 @@ def latest_articles(issn="2641-3337", num_items=20):
 
 def update():
     # Get articles from CrossRef
-    article_dicts = latest_articles()
+    article_dicts = latest_articles(num_items=10)
     articles = [Article.from_dict(article_dict) for article_dict in reversed(article_dicts)]
     latest_dois = {article.doi for article in articles}
 
