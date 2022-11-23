@@ -20,10 +20,11 @@ jobs:
         python-version: "3.10"
     - name: Install Python dependencies
       run: |-
-        python3 -m pip install Mastodon.py requests-html
+        python3 -m pip install Mastodon.py requests
     - name: Run script
       env:
         BOTSIN_SPACE_ACCESS_TOKEN: ${{ secrets.BOTSIN_SPACE_ACCESS_TOKEN }}
+        EMAIL: raf.guns@uantwerpen.be
       run: |-
         python3 qss-paper-bot.py
     - name: Commit and push if it changed
