@@ -41,7 +41,7 @@ def latest_articles(issn="2641-3337", num_items=20):
     url = f"http://api.crossref.org/journals/{issn}/works"
     params = {"sort": "published-online", "order": "desc", "rows": num_items}
     if email := os.environ.get("EMAIL"):
-        params["email"] = email
+        params["mailto"] = email
 
     r = requests.get(url, params=params)
     r.raise_for_status()
