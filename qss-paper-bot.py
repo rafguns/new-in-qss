@@ -1,7 +1,6 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
 
 import requests
 from mastodon import Mastodon
@@ -12,7 +11,7 @@ class Article:
     title: str
     url: str
     doi: str
-    authors: List[str]
+    authors: list[str]
 
     @classmethod
     def from_dict(cls, data):
