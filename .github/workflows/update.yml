@@ -23,7 +23,7 @@ jobs:
         python3 -m pip install Mastodon.py requests
     - name: Run script
       env:
-        BOTSIN_SPACE_ACCESS_TOKEN: ${{ secrets.BOTSIN_SPACE_ACCESS_TOKEN }}
+        MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
         EMAIL: raf.guns@uantwerpen.be
       run: |-
         python3 qss-paper-bot.py
