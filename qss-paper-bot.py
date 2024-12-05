@@ -66,10 +66,10 @@ def update():
     new_articles = [article for article in articles if article.doi in new_dois]
 
     # Connect to Mastodon instance
-    access_token = os.environ["BOTSIN_SPACE_ACCESS_TOKEN"]
+    access_token = os.environ["MASTODON_ACCESS_TOKEN"]
     mastodon = Mastodon(
         access_token=access_token,
-        api_base_url="https://botsin.space/",
+        api_base_url="https://mastodon.social/",
         ratelimit_method="pace",
     )
 
